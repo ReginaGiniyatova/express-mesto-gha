@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
+const {
+  NOT_FOUND_ERROR,
+  PAGE_NOT_FOUND_MESSAGE,
+} = require('./errors/errors');
 
 const { PORT = 3000 } = process.env;
 const CONNECTION_URL = 'mongodb://127.0.0.1:27017/';
@@ -23,6 +27,10 @@ app.use((req, res, next) => {
 });
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
+
+app.use((req, res, next) => {
+  next(res.status(NOT_FOUND_ERROR).send({ message: PAGE_NOT_FOUND_MESSAGE }));
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

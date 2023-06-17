@@ -10,6 +10,8 @@ const INVALID_ARGUMENTS_MESSAGE = 'Ошибка! Неккоректные дан
 const CARD_NOT_FOUND_MESSAGE = 'Ошибка! Карточка не найдена.';
 const CARD_WRONG_ID_MESSAGE = 'Неверный id карточки.';
 
+const PAGE_NOT_FOUND_MESSAGE = 'Страница не найдена.';
+
 module.exports = {
   INVALID_ARGUMENTS_ERROR,
   NOT_FOUND_ERROR,
@@ -20,4 +22,5 @@ module.exports = {
   INVALID_ARGUMENTS_MESSAGE,
   CARD_NOT_FOUND_MESSAGE,
   CARD_WRONG_ID_MESSAGE,
+  PAGE_NOT_FOUND_MESSAGE,
 };
