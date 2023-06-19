@@ -43,16 +43,17 @@ module.exports.createUser = (req, res) => {
     ));
 };
 
-module.exports.updateUserInfo = async (req, res) => {
+module.exports.updateUserInfo = (req, res) => {
   const { _id: userId } = req.user;
   const { name, about } = req.body;
 
-  await User.findByIdAndUpdate(
+  User.findByIdAndUpdate(
     userId,
     { name, about },
     {
       new: true,
       runValidators: true,
+      upsert: false,
     },
   )
     .then((user) => res.send(user))
@@ -63,16 +64,17 @@ module.exports.updateUserInfo = async (req, res) => {
     ));
 };
 
-module.exports.updateUserAvatar = async (req, res) => {
+module.exports.updateUserAvatar = (req, res) => {
   const { _id: userId } = req.user;
   const { avatar } = req.body;
 
-  await User.findByIdAndUpdate(
+  User.findByIdAndUpdate(
     userId,
     { avatar },
     {
       new: true,
       runValidators: true,
+      upsert: false,
     },
   )
     .then((user) => res.send(user))
