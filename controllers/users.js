@@ -43,11 +43,11 @@ module.exports.createUser = (req, res) => {
     ));
 };
 
-module.exports.updateUserInfo = (req, res) => {
+module.exports.updateUserInfo = async (req, res) => {
   const { _id: userId } = req.user;
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     userId,
     { name, about },
     {
@@ -63,11 +63,11 @@ module.exports.updateUserInfo = (req, res) => {
     ));
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateUserAvatar = async (req, res) => {
   const { _id: userId } = req.user;
   const { avatar } = req.body;
 
-  User.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     userId,
     { avatar },
     {
