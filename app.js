@@ -9,11 +9,9 @@ const {
 } = require('./errors/errors');
 
 const { PORT = 3000 } = process.env;
-const CONNECTION_URL = 'mongodb://127.0.0.1:27017/';
-const DB_NAME = 'mestodb';
 const app = express();
 
-mongoose.connect(`${CONNECTION_URL}${DB_NAME}`, {
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
