@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { URL_REGEX } = require('../utils/constants');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -15,7 +16,7 @@ const cardSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator: ({ length }) => length > 0,
+      validator: (url) => URL_REGEX.test(url),
       message: 'Ссылка на аватарку не должна быть пустой.',
     },
   },

@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
+const authRoutes = require('./routes/auth');
+const auth = require('./middlewares/auth');
+const NotFoundError = require('./errors/NotFoundError');
 const {
-  NOT_FOUND_ERROR,
   PAGE_NOT_FOUND_MESSAGE,
-} = require('./errors/errors');
+} = require('./utils/constants');
+const errorHandler = require('./middlewares/errorHandler');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -16,19 +20,18 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 });
 
 app.use(bodyParser.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '648cba72a483496e2c5c7081',
-  };
 
-  next();
-});
+app.use('/', authRoutes);
+
+app.use(auth);
+
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
 
-app.use((req, res, next) => {
-  next(res.status(NOT_FOUND_ERROR).send({ message: PAGE_NOT_FOUND_MESSAGE }));
-});
+app.use((req, res, next) => next(new NotFoundError(PAGE_NOT_FOUND_MESSAGE)));
+
+app.use(errors());
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);

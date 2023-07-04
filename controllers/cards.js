@@ -1,21 +1,22 @@
 const Card = require('../models/card');
+const InvalidArgumentError = require('../errors/InvalidArgumentError');
+const NotFoundError = require('../errors/NotFoundError');
+const PermissionError = require('../errors/PermissionError');
+const UnexpectedError = require('../errors/UnexpectedError');
 const {
-  INVALID_ARGUMENTS_ERROR,
-  NOT_FOUND_ERROR,
-  ERROR,
   SOMETHING_WENT_WRONG_MESSAGE,
   INVALID_ARGUMENTS_MESSAGE,
   CARD_NOT_FOUND_MESSAGE,
-  CARD_WRONG_ID_MESSAGE,
-} = require('../errors/errors');
+  PERMISSION_ERROR_MESSAGE,
+} = require('../utils/constants');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((card) => res.send(card))
-    .catch(() => res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE }));
+    .catch(() => next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE)));
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { _id: userId } = req.user;
   const { name, link } = req.body;
 
@@ -23,30 +24,35 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send(card))
     .catch((error) => (
       error.name === 'ValidationError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
+        ? next(new InvalidArgumentError(INVALID_ARGUMENTS_MESSAGE))
+        : next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE))
     ));
 };
 
-module.exports.deleteCardById = (req, res) => {
+module.exports.deleteCardById = (req, res, next) => {
   const { cardId } = req.params;
+  const { _id: userId } = req.user;
 
-  Card.findByIdAndDelete(cardId)
+  Card.findById(cardId)
     .then((card) => {
-      if (card) {
-        return res.send(card);
+      if (!card) {
+        throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
       }
 
-      return res.status(NOT_FOUND_ERROR).send({ message: CARD_NOT_FOUND_MESSAGE });
+      const { owner } = card;
+
+      if (owner.valueOf() !== userId) {
+        throw new PermissionError(PERMISSION_ERROR_MESSAGE);
+      }
+
+      return card.deleteOne()
+        .then(() => res.send(card))
+        .catch(() => next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE)));
     })
-    .catch((error) => (
-      error.name === 'CastError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: CARD_WRONG_ID_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
-    ));
+    .catch(next);
 };
 
-module.exports.setCardLike = (req, res) => {
+module.exports.setCardLike = (req, res, next) => {
   const { _id: userId } = req.user;
   const { cardId } = req.params;
 
@@ -60,16 +66,12 @@ module.exports.setCardLike = (req, res) => {
         return res.send(card);
       }
 
-      return res.status(NOT_FOUND_ERROR).send({ message: CARD_NOT_FOUND_MESSAGE });
+      throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
     })
-    .catch((error) => (
-      error.name === 'CastError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
-    ));
+    .catch(next);
 };
 
-module.exports.setCardDislike = (req, res) => {
+module.exports.setCardDislike = (req, res, next) => {
   const { _id: userId } = req.user;
   const { cardId } = req.params;
 
@@ -83,11 +85,7 @@ module.exports.setCardDislike = (req, res) => {
         return res.send(card);
       }
 
-      return res.status(NOT_FOUND_ERROR).send({ message: CARD_NOT_FOUND_MESSAGE });
+      throw new NotFoundError(CARD_NOT_FOUND_MESSAGE);
     })
-    .catch((error) => (
-      error.name === 'CastError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
-    ));
+    .catch(next);
 };

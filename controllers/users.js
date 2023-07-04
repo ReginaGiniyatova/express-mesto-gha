@@ -1,21 +1,20 @@
 const User = require('../models/user');
+const InvalidArgumentError = require('../errors/InvalidArgumentError');
+const NotFoundError = require('../errors/NotFoundError');
+const UnexpectedError = require('../errors/UnexpectedError');
 const {
-  INVALID_ARGUMENTS_ERROR,
-  NOT_FOUND_ERROR,
-  ERROR,
   SOMETHING_WENT_WRONG_MESSAGE,
   USER_NOT_FOUND_MESSAGE,
-  USER_WRONG_ID_MESSAGE,
   INVALID_ARGUMENTS_MESSAGE,
-} = require('../errors/errors');
+} = require('../utils/constants');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE }));
+    .catch(() => next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE)));
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
   User.findById(userId)
     .then((user) => {
@@ -23,27 +22,12 @@ module.exports.getUserById = (req, res) => {
         return res.send(user);
       }
 
-      return res.status(NOT_FOUND_ERROR).send({ message: USER_NOT_FOUND_MESSAGE });
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
     })
-    .catch((error) => (
-      error.name === 'CastError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: USER_WRONG_ID_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
-    ));
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.send(user))
-    .catch((error) => (
-      error.name === 'ValidationError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
-    ));
-};
-
-module.exports.updateUserInfo = (req, res) => {
+module.exports.updateUserInfo = (req, res, next) => {
   const { _id: userId } = req.user;
   const { name, about } = req.body;
 
@@ -59,12 +43,26 @@ module.exports.updateUserInfo = (req, res) => {
     .then((user) => res.send(user))
     .catch((error) => (
       error.name === 'ValidationError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
+        ? next(new InvalidArgumentError(INVALID_ARGUMENTS_MESSAGE))
+        : next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE))
     ));
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.getUserInfo = (req, res, next) => {
+  const { _id: userId } = req.user;
+
+  User.findById(userId)
+    .then((user) => {
+      if (user) {
+        return res.send(user);
+      }
+
+      throw new NotFoundError(USER_NOT_FOUND_MESSAGE);
+    })
+    .catch(next);
+};
+
+module.exports.updateUserAvatar = (req, res, next) => {
   const { _id: userId } = req.user;
   const { avatar } = req.body;
 
@@ -80,7 +78,7 @@ module.exports.updateUserAvatar = (req, res) => {
     .then((user) => res.send(user))
     .catch((error) => (
       error.name === 'ValidationError'
-        ? res.status(INVALID_ARGUMENTS_ERROR).send({ message: INVALID_ARGUMENTS_MESSAGE })
-        : res.status(ERROR).send({ message: SOMETHING_WENT_WRONG_MESSAGE })
+        ? next(new InvalidArgumentError(INVALID_ARGUMENTS_MESSAGE))
+        : next(new UnexpectedError(SOMETHING_WENT_WRONG_MESSAGE))
     ));
 };
