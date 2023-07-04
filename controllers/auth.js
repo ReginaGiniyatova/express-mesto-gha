@@ -28,7 +28,17 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.send(user))
+    .then((user) => {
+      const { _id } = user;
+
+      res.send({
+        email,
+        name,
+        about,
+        avatar,
+        _id,
+      });
+    })
     .catch((error) => (
       error.code === 11000
         ? next(new UserExistsError(USER_EXISTS_MESSAGE))
