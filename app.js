@@ -6,6 +6,7 @@ const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards');
 const authRoutes = require('./routes/auth');
 const auth = require('./middlewares/auth');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const NotFoundError = require('./errors/NotFoundError');
 const {
   PAGE_NOT_FOUND_MESSAGE,
@@ -21,12 +22,16 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 
 app.use(bodyParser.json());
 
+app.use(requestLogger);
+
 app.use('/', authRoutes);
 
 app.use(auth);
 
 app.use('/users', usersRoutes);
 app.use('/cards', cardsRoutes);
+
+app.use(errorLogger);
 
 app.use((req, res, next) => next(new NotFoundError(PAGE_NOT_FOUND_MESSAGE)));
 
